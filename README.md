@@ -1,25 +1,31 @@
-# 🌍 Pollution Regime Detection System
+# 🌍 AetherScan — Pollution Regime Detection System
 
-A machine learning system that detects **hidden pollution regimes** from air-quality time-series data using **Hidden Markov Models (HMM)** and presents insights through a web dashboard.
+AetherScan is a machine learning–powered web application that detects **hidden pollution regimes** from air-quality time-series data using **Hidden Markov Models (HMM)** and presents insights through an interactive dashboard.
 
 ---
 
 ## 📌 Project Overview
 
-This project analyzes pollution data (PM2.5, PM10, NO2, CO, etc.) to identify **pollution regimes** — stable patterns like Low, Moderate, or Hazardous pollution.
+AetherScan analyzes pollution data (PM2.5, PM10, NO₂, CO, etc.) to identify **pollution regimes** — stable air-quality patterns such as Low, Moderate, Unhealthy, or Hazardous.
 
-Instead of simple AQI thresholds, this system uses **HMM to learn patterns and transitions over time**, making predictions more time-aware and data-driven.
+Unlike traditional AQI threshold systems, AetherScan uses **Hidden Markov Models (HMMs)** to learn temporal patterns and transitions in pollution data. This makes predictions:
+
+- Time-aware  
+- Pattern-driven  
+- More realistic for real-world pollution behavior  
 
 ---
 
 ## 🧠 Core Idea
 
-- Pollution levels follow patterns over time  
-- These patterns are treated as **hidden states (regimes)**  
+- Pollution evolves in patterns over time  
+- These patterns are modeled as **hidden states (regimes)**  
 - HMM learns:
   - Transition probabilities  
   - Emission probabilities  
-  - Most likely regime sequence  
+  - Most likely regime sequences  
+
+This allows the system to detect regime shifts and stability periods.
 
 ---
 
@@ -36,22 +42,74 @@ Instead of simple AQI thresholds, this system uses **HMM to learn patterns and t
 
 ---
 
-## ⚙️ Tech Stack
+# 🎨 AetherScan UI (Figma Wireframes)
 
-**Backend**
-- Python
-- FastAPI
-- hmmlearn
-- Pandas, NumPy
+## 📊 Dashboard — “AirSense”
+Displays real-time pollution trends and regime insights.
 
-**Frontend**
-- React / Streamlit
+![Dashboard](https://github.com/user-attachments/assets/056a8055-bc8e-46ff-b11f-fa850a16a23b)
 
-**Database**
-- MongoDB / PostgreSQL
+**Key Features**
+- PM2.5 trend chart  
+- Current regime display  
+- AQI indicators  
+- Confidence score  
+- API connection status  
 
 ---
 
-## 🔄 Pipeline
+## 📥 Model Input / Data Upload — “DataFlow”
+Interface for dataset upload and HMM configuration.
 
+![Model Input](https://github.com/user-attachments/assets/0c2ca3d6-e7d3-47d3-b901-4f91a98f3241)
 
+**Key Features**
+- CSV/JSON upload  
+- Hidden state slider (N)  
+- Covariance selection  
+- Train & classify trigger  
+
+---
+
+## 📈 Prediction & Analytics — “Quantalytics”
+Deep model insights and regime statistics.
+
+![Analytics](https://github.com/user-attachments/assets/2dd82089-2797-41ce-ac69-c5618b1247d2)
+
+**Key Features**
+- Transition probability heatmap  
+- Regime mean & variance table  
+- Manual inference tool  
+
+---
+
+## 🗂️ History & Logs
+Track previous model runs and performance.
+
+![History](https://github.com/user-attachments/assets/45ee7a2b-38bd-45e4-b9b4-b8b00d37e380)
+
+**Key Features**
+- Dataset history  
+- Log-likelihood scores  
+- Re-run and export options  
+
+---
+
+## ⚙️ Tech Stack
+
+### Backend
+- Python  
+- FastAPI  
+- hmmlearn  
+- Pandas  
+- NumPy  
+
+### Frontend
+- React / Streamlit  
+
+### Database
+- MongoDB / PostgreSQL  
+
+---
+
+## 🔄 ML Pipeline
