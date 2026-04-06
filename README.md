@@ -1,45 +1,116 @@
-# Pollution Regime Classification (HMM)
+# 🌍 AetherScan — Pollution Regime Detection System
 
-This repo currently implements **only the model training** part of the project: train a Gaussian Hidden Markov Model (HMM) on time-series pollution data and label each timestamp as **stable** or **volatile** based on within-state variance.
+AetherScan is a machine learning–powered web application that detects **hidden pollution regimes** from air-quality time-series data using **Hidden Markov Models (HMM)** and presents insights through an interactive dashboard.
 
-## Folder structure
+---
 
-```
-.
-├─ backend/
-│  ├─ requirements.txt
-│  ├─ train_hmm.py
-│  └─ artifacts/            # generated after training (gitignored)
-└─ frontend/                # placeholder for future UI
-```
+## 📌 Project Overview
 
-## Dataset
+AetherScan analyzes pollution data (PM2.5, PM10, NO₂, CO, etc.) to identify **pollution regimes** — stable air-quality patterns such as Low, Moderate, Unhealthy, or Hazardous.
 
-The included `pollution.csv` is expected to have:
-- `Date` and `Time` columns
-- numeric pollutant/sensor columns
-- `;` as delimiter
-- `,` decimal separator (e.g. `2,6`)
-- `-200` as a missing-value sentinel
+Unlike traditional AQI threshold systems, AetherScan uses **Hidden Markov Models (HMMs)** to learn temporal patterns and transitions in pollution data. This makes predictions:
 
-## Run training
+- Time-aware  
+- Pattern-driven  
+- More realistic for real-world pollution behavior  
 
-From the repo root:
+---
 
-```bash
-python -m venv backend/.venv
-source backend/.venv/bin/activate
-pip install -r backend/requirements.txt
+## 🧠 Core Idea
 
-python backend/train_hmm.py --csv pollution.csv --states 4 --out backend/artifacts
-```
+- Pollution evolves in patterns over time  
+- These patterns are modeled as **hidden states (regimes)**  
+- HMM learns:
+  - Transition probabilities  
+  - Emission probabilities  
+  - Most likely regime sequences  
 
-## Outputs
+This allows the system to detect regime shifts and stability periods.
 
-After training, `backend/artifacts/` will contain:
-- `hmm_model.joblib`: trained `GaussianHMM`
-- `scaler.joblib`: `StandardScaler` + selected feature column list
-- `state_stats.csv`: per-state variance + stable/volatile label
-- `predictions.csv`: timestamp → predicted state + regime label
-- `metadata.json`: run metadata
+---
+
+## 🏗️ System Architecture
+
+### Architecture Diagram 1
+![System Architecture 1](https://github.com/user-attachments/assets/60bcceb6-847f-401b-b77c-8b29ae547861)
+
+### Architecture Diagram 2
+![System Architecture 2](https://github.com/user-attachments/assets/f59d5180-cb59-4b9e-a057-a931002fba26)
+
+### Architecture Diagram 3
+![System Architecture 3](https://github.com/user-attachments/assets/62d9e740-08a7-4d22-a04a-54d8eadd2eac)
+
+---
+
+# 🎨 AetherScan UI (Figma Wireframes)
+
+## 📊 Dashboard — “AirSense”
+Displays real-time pollution trends and regime insights.
+
+![Dashboard](https://github.com/user-attachments/assets/056a8055-bc8e-46ff-b11f-fa850a16a23b)
+
+**Key Features**
+- PM2.5 trend chart  
+- Current regime display  
+- AQI indicators  
+- Confidence score  
+- API connection status  
+
+---
+
+## 📥 Model Input / Data Upload — “DataFlow”
+Interface for dataset upload and HMM configuration.
+
+![Model Input](https://github.com/user-attachments/assets/0c2ca3d6-e7d3-47d3-b901-4f91a98f3241)
+
+**Key Features**
+- CSV/JSON upload  
+- Hidden state slider (N)  
+- Covariance selection  
+- Train & classify trigger  
+
+---
+
+## 📈 Prediction & Analytics — “Quantalytics”
+Deep model insights and regime statistics.
+
+![Analytics](https://github.com/user-attachments/assets/2dd82089-2797-41ce-ac69-c5618b1247d2)
+
+**Key Features**
+- Transition probability heatmap  
+- Regime mean & variance table  
+- Manual inference tool  
+
+---
+
+## 🗂️ History & Logs
+Track previous model runs and performance.
+
+![History](https://github.com/user-attachments/assets/45ee7a2b-38bd-45e4-b9b4-b8b00d37e380)
+
+**Key Features**
+- Dataset history  
+- Log-likelihood scores  
+- Re-run and export options  
+
+---
+
+## ⚙️ Tech Stack
+
+### Backend
+- Python  
+- FastAPI  
+- hmmlearn  
+- Pandas  
+- NumPy  
+
+### Frontend
+- React / Streamlit  
+
+### Database
+- MongoDB / PostgreSQL  
+
+---
+
+## 🔄 ML Pipeline
 
