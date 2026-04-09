@@ -14,7 +14,7 @@ async def upload(file: UploadFile = File(...)):
     with open(file_path, "wb") as f:
         f.write(await file.read())
 
-    df = pd.read_csv(file_path)
+    df = pd.read_csv(file_path , sep=";")
 
     return {
         "message": "Uploaded",

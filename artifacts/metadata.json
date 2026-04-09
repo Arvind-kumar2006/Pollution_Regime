@@ -1,0 +1,20 @@
+{
+  "csv_path": "data/pollution.csv",
+  "rows_after_cleaning": 9357,
+  "feature_cols": [
+    "CO(GT)",
+    "NO2(GT)",
+    "T",
+    "RH",
+    "AH"
+  ],
+  "n_states": 3,
+  "n_iter": 200,
+  "log_likelihood": -57506.278341272475,
+  "artifacts": {
+    "hmm_model": "artifacts/hmm_model.joblib",
+    "scaler": "artifacts/scaler.joblib",
+    "state_stats": "artifacts/state_stats.csv",
+    "predictions": "artifacts/predictions.csv"
+  }
+}

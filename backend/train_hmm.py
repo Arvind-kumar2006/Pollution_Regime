@@ -113,11 +113,11 @@ def train_hmm(
     state_to_regime = stats.set_index("state")["regime"].to_dict()
 
     predictions = clean_df[["timestamp"]].copy()
-    if "CO(GT)" in clean_df.columns:
-        predictions['value'] = clean_df['CO(GT)']
+    
+    predictions['value'] = clean_df['CO(GT)']
     predictions["state"] = states.astype(int)
     predictions["regime"] = predictions["state"].map(state_to_regime)
-
+    
     model_path = output_dir / "hmm_model.joblib"
     scaler_path = output_dir / "scaler.joblib"
     state_stats_path = output_dir / "state_stats.csv"

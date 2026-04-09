@@ -1,9 +1,10 @@
 from fastapi import APIRouter, HTTPException
-from pathlib import Path
-import json
+
+from backend.database import SessionLocal
+from backend.models import ModelRun
 
 # Import service layer (business logic)
-from services.hmm_service import train_model_service, predict_service
+from backend.services.hmm_service import train_model_service, predict_service
 
 router = APIRouter(prefix="/model", tags=["Model"])
 
@@ -11,7 +12,7 @@ router = APIRouter(prefix="/model", tags=["Model"])
 # ----------------------------
 # Train Model
 # ----------------------------
-@router.post("/train")
+@router.post("/train" )
 def train(n_states: int = 3):
     try:
         result = train_model_service(n_states)
@@ -39,24 +40,23 @@ def predict(limit: int = 100, regime: str = None):
 # ----------------------------
 @router.get("/history")
 def history():
-    metadata_path = Path("artifacts/metadata.json")
-
-    if not metadata_path.exists():
-        raise HTTPException(
-            status_code=400,
-            detail="No history found. Train model first."
-        )
-
     try:
-        with open(metadata_path, "r") as f:
-            data = json.load(f)
+        db = SessionLocal()
 
-        # ensure it's always list
-        if not isinstance(data, list):
-            data = [data]
+        runs = db.query(ModelRun).all()
+
+        data = []
+        for run in runs:
+            data.append({
+                "run_id": str(run.run_id),
+                "n_states": run.n_states,
+                "log_likelihood": run.log_likelihood
+            })
+
+        db.close()
 
         return {
-            "message": "History fetched successfully",
+            "message": "History fetched from DB",
             "total_runs": len(data),
             "data": data
         }
@@ -64,29 +64,35 @@ def history():
     except Exception as e:
         raise HTTPException(
             status_code=500,
-            detail=f"Error reading history: {str(e)}"
+            detail=f"Error fetching history: {str(e)}"
         )
+    finally:
+        db.close()   
 
 # ----------------------------
 # Model Info (BONUS - HIGH VALUE)
 # ----------------------------
 @router.get("/info")
 def model_info():
-    metadata_path = Path("artifacts/metadata.json")
-
-    if not metadata_path.exists():
-        raise HTTPException(status_code=400, detail="No model found. Train first.")
-
     try:
-        with open(metadata_path, "r") as f:
-            data = json.load(f)
+        db = SessionLocal()
+
+        run = db.query(ModelRun).order_by(ModelRun.run_id.desc()).first()
+
+        db.close()
+
+        if not run:
+            raise HTTPException(status_code=400, detail="No model found")
 
         return {
-            "n_states": data.get("n_states"),
-            "log_likelihood": data.get("log_likelihood"),
-            "features": data.get("feature_cols"),
-            "rows_used": data.get("rows_after_cleaning")
+            "n_states": run.n_states,
+            "log_likelihood": run.log_likelihood
         }
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error fetching model info: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error fetching model info: {str(e)}"
+        )
+    finally:
+        db.close()
