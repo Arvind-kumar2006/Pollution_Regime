@@ -56,7 +56,8 @@ def save_model_run(dataset_id, metadata, model):
 # ----------------------------
 def save_predictions(run_id, df):
     db = SessionLocal()
-
+    db.query(RegimePrediction).delete()
+    db.commit()
     for _, row in df.iterrows():
         pred = RegimePrediction(
             run_id=run_id,
@@ -66,11 +67,9 @@ def save_predictions(run_id, df):
             regime=row["regime"]
         )
         db.add(pred)
-
+    
     db.commit()
     db.close()
-
-
 # ----------------------------
 # TRAIN SERVICE
 # ----------------------------

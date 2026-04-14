@@ -10,7 +10,7 @@
   ],
   "n_states": 3,
   "n_iter": 200,
-  "log_likelihood": -57506.278341272475,
+  "log_likelihood": -57506.27834126751,
   "artifacts": {
     "hmm_model": "artifacts/hmm_model.joblib",
     "scaler": "artifacts/scaler.joblib",
