@@ -43,6 +43,15 @@ See:
 - `docs/setup-local.md`
 - `docs/deploy-ec2.md`
 
+## Resume-ready highlights
+- Full-stack ML analytics app (FastAPI + React) for pollution regime classification using HMMs
+- Persisted runs and predictions with Postgres-backed auditability
+- Canonical latest successful run selection to keep dashboard widgets consistent
+- Production hardening: validated settings, readiness checks, env-based configuration
+
+## GitHub topics
+`fastapi`, `react`, `tailwindcss`, `recharts`, `postgresql`, `sqlalchemy`, `pandas`, `numpy`, `hmmlearn`, `hidden-markov-model`, `time-series`, `data-visualization`
+
 ## How HMM is used here
 - Clean and standardize time-series features
 - Train an HMM with configurable hidden states (`n_states`)
