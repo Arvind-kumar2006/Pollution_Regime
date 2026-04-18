@@ -1,17 +1,22 @@
+import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
 # ----------------------------
-# DATABASE URL (Docker PostgreSQL)
+# DATABASE URL
 # ----------------------------
-DATABASE_URL = "postgresql://postgres:1234@localhost:5432/pollution_db"
+DATABASE_URL = os.environ.get("DATABASE_URL")
+if not DATABASE_URL:
+    raise RuntimeError(
+        "DATABASE_URL is required. Set it in the environment (see backend/.env.example)."
+    )
 
 # ----------------------------
 # ENGINE (connection to DB)
 # ----------------------------
 engine = create_engine(
     DATABASE_URL,
-    echo=True  # optional: shows SQL logs (good for debugging)
+    echo=os.environ.get("SQL_ECHO", "").lower() in ("1", "true", "yes"),
 )
 
 # ----------------------------
@@ -20,11 +25,11 @@ engine = create_engine(
 SessionLocal = sessionmaker(
     autocommit=False,
     autoflush=False,
-    bind=engine
+    bind=engine,
 )
 
 # ----------------------------
-# BASE CLASS (for models)
+# BASE CLASS (used for ORM models)
 # ----------------------------
 Base = declarative_base()
 
