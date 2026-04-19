@@ -1,73 +1,70 @@
 /**
- * Vercel serverless catch-all proxy.
- * Routes /api/* → http://EC2:8000/*  for ALL HTTP methods.
- *
- * Vercel rewrites only support GET/HEAD for external http:// destinations.
- * This function handles PUT, POST, DELETE etc. that rewrites cannot.
+ * Vercel serverless proxy — forwards ALL HTTP methods to EC2.
+ * Uses Node.js built-in `http` module (no fetch dependency).
  */
+import http from 'http';
 
-const BACKEND_ORIGIN = "http://3.93.196.160:8000";
+const BACKEND_HOST = '3.93.196.160';
+const BACKEND_PORT = 8000;
 
-export const config = {
-  api: {
-    // Disable body parsing so we can forward raw body (needed for file uploads)
-    bodyParser: false,
-  },
-};
+export default function handler(req, res) {
+  return new Promise((resolve) => {
+    // Build backend path from catch-all segments
+    const pathParts = Array.isArray(req.query.path)
+      ? req.query.path
+      : req.query.path
+      ? [req.query.path]
+      : [];
+    const backendPath = pathParts.join('/');
 
-export default async function handler(req, res) {
-  const pathParts = req.query.path || [];
-  const backendPath = Array.isArray(pathParts) ? pathParts.join("/") : pathParts;
-
-  // Rebuild query string (exclude the internal 'path' param added by Next/Vercel)
-  const url = new URL(`${BACKEND_ORIGIN}/${backendPath}`);
-  const incomingUrl = new URL(req.url, "http://placeholder");
-  incomingUrl.searchParams.forEach((value, key) => {
-    if (key !== "path") url.searchParams.append(key, value);
-  });
-
-  // Forward safe headers — drop host & connection which must not be forwarded
-  const forwardHeaders = {};
-  const skipHeaders = new Set(["host", "connection", "transfer-encoding"]);
-  for (const [key, value] of Object.entries(req.headers)) {
-    if (!skipHeaders.has(key.toLowerCase())) {
-      forwardHeaders[key] = value;
+    // Rebuild query string — exclude the internal 'path' Vercel param
+    const params = new URLSearchParams();
+    for (const [key, value] of Object.entries(req.query || {})) {
+      if (key === 'path') continue;
+      const vals = Array.isArray(value) ? value : [value];
+      vals.forEach((v) => params.append(key, v));
     }
-  }
+    const qs = params.toString();
+    const targetPath = `/${backendPath}${qs ? '?' + qs : ''}`;
 
-  // Collect raw body
-  const rawBody = await new Promise((resolve) => {
-    const chunks = [];
-    req.on("data", (chunk) => chunks.push(chunk));
-    req.on("end", () => resolve(chunks.length ? Buffer.concat(chunks) : null));
-  });
+    // Forward headers — drop host & connection (must not be forwarded)
+    const headers = { ...req.headers };
+    delete headers['host'];
+    delete headers['connection'];
 
-  try {
-    const backendRes = await fetch(url.toString(), {
+    const options = {
+      hostname: BACKEND_HOST,
+      port: BACKEND_PORT,
+      path: targetPath,
       method: req.method,
-      headers: forwardHeaders,
-      body: rawBody || undefined,
-    });
+      headers,
+    };
 
-    // Forward response headers
-    backendRes.headers.forEach((value, key) => {
-      if (!["content-encoding", "transfer-encoding", "connection"].includes(key)) {
-        res.setHeader(key, value);
+    const proxyReq = http.request(options, (proxyRes) => {
+      res.statusCode = proxyRes.statusCode;
+
+      // Forward response headers
+      for (const [key, val] of Object.entries(proxyRes.headers)) {
+        const lower = key.toLowerCase();
+        if (lower !== 'content-encoding' && lower !== 'transfer-encoding' && lower !== 'connection') {
+          res.setHeader(key, val);
+        }
       }
+
+      // Stream the response body back to the browser
+      proxyRes.pipe(res, { end: true });
+      proxyRes.on('end', resolve);
     });
 
-    res.status(backendRes.status);
+    proxyReq.on('error', (err) => {
+      console.error('[PROXY ERROR]', err.message);
+      res.statusCode = 502;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify({ error: 'Bad Gateway', detail: err.message }));
+      resolve();
+    });
 
-    const contentType = backendRes.headers.get("content-type") || "";
-    if (contentType.includes("application/json")) {
-      const data = await backendRes.json();
-      res.json(data);
-    } else {
-      const buffer = await backendRes.arrayBuffer();
-      res.send(Buffer.from(buffer));
-    }
-  } catch (err) {
-    console.error("[PROXY ERROR]", err);
-    res.status(502).json({ error: "Bad Gateway", detail: err.message });
-  }
+    // Stream the request body (needed for POST/PUT/multipart uploads)
+    req.pipe(proxyReq, { end: true });
+  });
 }
