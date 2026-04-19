@@ -27,7 +27,7 @@ services:
     environment:
       DATABASE_URL: postgresql://postgres:password@db:5432/pollution_db
       APP_ENV: development
-      CORS_ORIGINS: http://localhost:5173,http://127.0.0.1:8000
+      CORS_ORIGINS: http://localhost:5173,http://127.0.0.1:5173
       UPLOAD_MAX_MB: "50"
       SQL_ECHO: "false"
     ports:
