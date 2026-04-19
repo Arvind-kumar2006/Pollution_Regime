@@ -71,7 +71,8 @@ export const getSettings = () => {
 };
 
 export const putSettings = (payload) => {
-  return API.put("/settings/", payload, { headers: settingsWriteHeaders() });
+  // POST (not PUT): Vercel → external HTTP rewrites often return 405 for PUT; backend accepts POST /settings/ as alias.
+  return API.post("/settings/", payload, { headers: settingsWriteHeaders() });
 };
 
 export const resetSettings = () => {

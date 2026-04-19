@@ -183,6 +183,15 @@ def put_settings(payload: dict = Body(...), _auth: None = Depends(require_settin
     return _put_settings_handler(payload)
 
 
+@router.post("/")
+def post_settings_update(payload: dict = Body(...), _auth: None = Depends(require_settings_write_key)):
+    """
+    Same behavior as PUT /settings/. Some hosts (e.g. Vercel rewrites to external HTTP)
+    return 405 for PUT while POST is proxied correctly — keep both for compatibility.
+    """
+    return _put_settings_handler(payload)
+
+
 @router.post("/reset")
 def reset_settings(_auth: None = Depends(require_settings_write_key)):
     db = SessionLocal()
