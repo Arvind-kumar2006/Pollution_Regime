@@ -123,6 +123,26 @@ Recommended split:
 - FastAPI backend behind reverse proxy
 - PostgreSQL (RDS preferred)
 
+### Deployment roots (important)
+- **Backend deploy root (preferred)**: use `backend/Dockerfile` for backend-only builds
+- **Backend fallback**: repository root `Dockerfile` (kept working)
+- **Frontend deploy root**: `frontend/` (for Vercel/Netlify)
+
+Backend image build commands:
+```bash
+# Preferred
+docker build -f backend/Dockerfile -t pollution-regime-api:latest .
+
+# Fallback
+docker build -f Dockerfile -t pollution-regime-api:latest .
+```
+
+For Vercel/Netlify:
+- set **Root Directory** to `frontend`
+- set build command to `npm run build`
+- set output directory to `dist`
+- set env `VITE_API_URL=https://your-api-domain`
+
 ### Required backend env (production)
 - `APP_ENV=production`
 - `DATABASE_URL=postgresql://...`
