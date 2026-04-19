@@ -1,70 +1,69 @@
 /**
- * Vercel serverless proxy — forwards ALL HTTP methods to EC2.
- * Uses Node.js built-in `http` module (no fetch dependency).
+ * Vercel serverless catch-all proxy.
+ * Forwards ALL HTTP methods (GET, POST, PUT, DELETE) to the EC2 backend.
+ * Uses the global fetch API (available in Node.js 18+ on Vercel).
  */
-import http from 'http';
 
-const BACKEND_HOST = '3.93.196.160';
-const BACKEND_PORT = 8000;
+const EC2 = 'http://3.93.196.160:8000';
 
-export default function handler(req, res) {
-  return new Promise((resolve) => {
-    // Build backend path from catch-all segments
-    const pathParts = Array.isArray(req.query.path)
-      ? req.query.path
-      : req.query.path
-      ? [req.query.path]
-      : [];
-    const backendPath = pathParts.join('/');
+const SKIP_REQ_HEADERS  = new Set(['host', 'connection', 'transfer-encoding']);
+const SKIP_RES_HEADERS  = new Set(['content-encoding', 'transfer-encoding', 'connection']);
 
-    // Rebuild query string — exclude the internal 'path' Vercel param
-    const params = new URLSearchParams();
-    for (const [key, value] of Object.entries(req.query || {})) {
-      if (key === 'path') continue;
-      const vals = Array.isArray(value) ? value : [value];
-      vals.forEach((v) => params.append(key, v));
+export default async function handler(req, res) {
+  try {
+    // Build the backend path from Vercel's catch-all segments
+    const segs = [].concat(req.query.path || []);
+    const backendPath = segs.join('/');
+
+    // Rebuild query string — drop Vercel's internal 'path' param
+    const qp = new URLSearchParams();
+    for (const [k, v] of Object.entries(req.query)) {
+      if (k === 'path') continue;
+      for (const val of [].concat(v)) qp.append(k, val);
     }
-    const qs = params.toString();
-    const targetPath = `/${backendPath}${qs ? '?' + qs : ''}`;
+    const qs = qp.toString();
+    const url = `${EC2}/${backendPath}${qs ? '?' + qs : ''}`;
 
-    // Forward headers — drop host & connection (must not be forwarded)
-    const headers = { ...req.headers };
-    delete headers['host'];
-    delete headers['connection'];
+    console.log(`[PROXY] ${req.method} ${url}`);
 
-    const options = {
-      hostname: BACKEND_HOST,
-      port: BACKEND_PORT,
-      path: targetPath,
-      method: req.method,
-      headers,
-    };
+    // Forward request headers (drop hop-by-hop headers)
+    const fwdHeaders = {};
+    for (const [k, v] of Object.entries(req.headers)) {
+      if (!SKIP_REQ_HEADERS.has(k.toLowerCase())) fwdHeaders[k] = v;
+    }
 
-    const proxyReq = http.request(options, (proxyRes) => {
-      res.statusCode = proxyRes.statusCode;
+    // Read request body for methods that have one
+    let body = undefined;
+    if (!['GET', 'HEAD'].includes(req.method)) {
+      const chunks = [];
+      for await (const chunk of req) chunks.push(chunk);
+      if (chunks.length) body = Buffer.concat(chunks);
+    }
 
-      // Forward response headers
-      for (const [key, val] of Object.entries(proxyRes.headers)) {
-        const lower = key.toLowerCase();
-        if (lower !== 'content-encoding' && lower !== 'transfer-encoding' && lower !== 'connection') {
-          res.setHeader(key, val);
-        }
-      }
-
-      // Stream the response body back to the browser
-      proxyRes.pipe(res, { end: true });
-      proxyRes.on('end', resolve);
+    // Call EC2 — fetch follows redirects automatically (handles FastAPI slash redirects)
+    const upstream = await fetch(url, {
+      method:   req.method,
+      headers:  fwdHeaders,
+      body,
+      redirect: 'follow',
     });
 
-    proxyReq.on('error', (err) => {
-      console.error('[PROXY ERROR]', err.message);
-      res.statusCode = 502;
-      res.setHeader('Content-Type', 'application/json');
-      res.end(JSON.stringify({ error: 'Bad Gateway', detail: err.message }));
-      resolve();
+    // Forward response status
+    res.statusCode = upstream.status;
+
+    // Forward response headers
+    upstream.headers.forEach((v, k) => {
+      if (!SKIP_RES_HEADERS.has(k.toLowerCase())) res.setHeader(k, v);
     });
 
-    // Stream the request body (needed for POST/PUT/multipart uploads)
-    req.pipe(proxyReq, { end: true });
-  });
+    // Forward response body
+    const buf = await upstream.arrayBuffer();
+    res.end(Buffer.from(buf));
+
+  } catch (err) {
+    console.error('[PROXY ERROR]', String(err));
+    res.statusCode = 502;
+    res.setHeader('content-type', 'application/json');
+    res.end(JSON.stringify({ error: 'Proxy error', detail: String(err) }));
+  }
 }
