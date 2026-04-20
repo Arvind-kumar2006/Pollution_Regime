@@ -6,7 +6,10 @@
       "dest": "http://3.93.196.160:8000/$1"
     },
     {
-      "src": "/((?!api/).*)",
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
       "dest": "/index.html"
     }
   ]
