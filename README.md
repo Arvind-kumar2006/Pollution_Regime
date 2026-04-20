@@ -1,5 +1,7 @@
 # Pollution Regime Classification (HMM)
 
+🔗 **Live Demo:** https://dspollutionregime.vercel.app/
+
 Production-ready full-stack analytics application that classifies **hidden pollution regimes** (stable, volatile, high) from air-quality time series using **Hidden Markov Models (HMM)**.
 
 ## Project overview
