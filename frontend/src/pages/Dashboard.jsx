@@ -286,7 +286,7 @@ export default function Dashboard() {
 
         <div style={{ width: "100%", height: 350 }}>
           <ResponsiveContainer>
-            <LineChart data={chart} margin={{ top: 20, right: 10, left: -20, bottom: 0 }}>
+            <LineChart data={chart} margin={{ top: 20, right: 10, left: -20, bottom: 10 }}>
               <CartesianGrid stroke="#E2E8F0" strokeDasharray="6 6" vertical={false} />
               <XAxis 
                 dataKey="timeStr" 
@@ -351,13 +351,14 @@ export default function Dashboard() {
               />
               <Brush 
                 dataKey="timeStr" 
-                height={24} 
+                height={28}
                 stroke="#6366F1" 
                 fill="#F8FAFC"
                 travellerWidth={12}
                 tickFormatter={() => ""}
                 startIndex={Math.max(0, chart.length - 24)} 
                 endIndex={chart.length - 1}
+                y={315}
               />
             </LineChart>
           </ResponsiveContainer>
