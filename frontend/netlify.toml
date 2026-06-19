@@ -3,7 +3,7 @@
 
 [[redirects]]
   from = "/api/*"
-  to = "http://3.93.196.160:8000/:splat"
+  to = "https://pollution-regime.onrender.com/:splat"
   status = 200
   force = true
 

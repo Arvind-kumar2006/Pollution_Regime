@@ -7,9 +7,9 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
     proxy: {
-      // In local dev: /api/* → EC2 backend (same as production)
+      // In local dev: /api/* → Render backend (same as production)
       '/api': {
-        target: 'http://3.93.196.160:8000',
+        target: 'https://pollution-regime.onrender.com',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ''),
       },
