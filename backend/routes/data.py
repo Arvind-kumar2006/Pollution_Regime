@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 from fastapi import APIRouter, File, HTTPException, UploadFile
 
-from backend.config import UPLOAD_MAX_MB
+from backend.config import UPLOAD_MAX_MB, DATA_DIR
 from backend.database import SessionLocal
 from backend.models import Dataset
 
@@ -17,8 +17,7 @@ router = APIRouter(prefix="/data", tags=["Data"])
 
 _MAX_BYTES = UPLOAD_MAX_MB * 1024 * 1024
 
-DATA_DIR = Path("data")
-DATA_DIR.mkdir(exist_ok=True)
+DATA_DIR.mkdir(parents=True, exist_ok=True)
 
 
 @router.post("/upload")
@@ -81,7 +80,7 @@ async def upload(file: UploadFile = File(...)):
         for row in preview_df.to_dict(orient="records")
     ]
 
-    rel_path = str(Path("data") / secure_filename)
+    rel_path = str(DATA_DIR / secure_filename)
 
     # --- Persist to DB ---
     try:
