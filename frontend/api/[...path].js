@@ -3,10 +3,10 @@
  * Handles ALL HTTP methods including PUT and DELETE which Vercel's
  * external URL rewrites block.
  *
- * Route: /api/* → this function → http://3.93.196.160:8000/*
+ * Route: /api/* → this function → https://pollution-regime.onrender.com/*
  */
 
-const EC2 = 'http://3.93.196.160:8000';
+const EC2 = 'https://pollution-regime.onrender.com';
 
 export default async function handler(req, res) {
   try {
