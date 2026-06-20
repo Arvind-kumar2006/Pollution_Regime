@@ -1,10 +1,25 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getDashboardLatest, getModelInfo } from "../api/api";
+import {
+  Activity,
+  Cpu,
+  Database,
+  Upload,
+  BarChart3,
+  Shield,
+  Layers,
+  LineChart,
+  Network,
+  ArrowRight,
+  Zap,
+  CheckCircle2
+} from "lucide-react";
 
 const Landing = () => {
   const [modelInfo, setModelInfo] = useState(null);
   const [latestPrediction, setLatestPrediction] = useState(null);
+  const [hoveredRegime, setHoveredRegime] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -50,9 +65,17 @@ const Landing = () => {
     return "stable";
   };
 
+  const getRegimeColor = (regime) => {
+    const r = normalizeRegime(regime);
+    if (r === "stable") return "text-emerald-400 border-emerald-500/30 bg-emerald-500/10";
+    if (r === "volatile") return "text-amber-400 border-amber-500/30 bg-amber-500/10";
+    if (r === "high") return "text-rose-400 border-rose-500/30 bg-rose-500/10";
+    return "text-slate-400 border-slate-500/30 bg-slate-500/10";
+  };
+
   const confidencePct =
     latestPrediction?.confidence !== undefined && latestPrediction?.confidence !== null
-      ? `${Number(latestPrediction.confidence).toFixed(1)}%`
+      ? `${(Number(latestPrediction.confidence) * 100).toFixed(1)}%`
       : "—";
   const currentAqi =
     latestPrediction?.aqi !== undefined && latestPrediction?.aqi !== null
@@ -60,250 +83,354 @@ const Landing = () => {
       : "—";
 
   return (
-    <div className="bg-slate-50 text-slate-900 min-h-screen font-sans">
+    <div className="bg-slate-950 text-slate-100 min-h-screen font-sans overflow-x-hidden selection:bg-indigo-500 selection:text-white">
+      
+      {/* Decorative Glow Blobs */}
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-[120px] pointer-events-none -z-10" />
+      <div className="absolute top-[400px] left-[-200px] w-[600px] h-[600px] bg-indigo-500/5 rounded-full blur-[140px] pointer-events-none -z-10" />
 
       {/* ================= NAVBAR ================= */}
-      <div className="w-full border-b border-slate-200 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/80 px-5 md:px-10 xl:px-20 py-4 flex justify-between items-center">
-
+      <nav className="w-full border-b border-slate-900 bg-slate-950/80 backdrop-blur-md sticky top-0 z-50 px-6 md:px-12 xl:px-24 py-4 flex justify-between items-center">
         {/* Logo */}
-        <div className="flex items-center gap-3">
-          <div className="w-7 h-7 bg-blue-600 rounded-md shadow-sm"></div>
-          <span className="text-[18px] font-semibold text-blue-600">
-            Pollution Regime
+        <div className="flex items-center gap-3 group cursor-pointer">
+          <div className="relative flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-500 shadow-lg shadow-blue-500/20 group-hover:scale-105 transition-all">
+            <Activity size={16} className="text-white animate-pulse" />
+          </div>
+          <span className="text-lg font-black tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
+            Aero<span className="text-blue-500">Metrics</span>
           </span>
         </div>
 
-        {/* Center Links */}
-        <div className="hidden lg:flex gap-10 text-[14px] text-slate-500">
-          <span className="hover:text-slate-900 cursor-pointer">Docs</span>
-          <span className="hover:text-slate-900 cursor-pointer">Methodology</span>
-          <span className="hover:text-slate-900 cursor-pointer">Contact</span>
+        {/* Links */}
+        <div className="hidden lg:flex items-center gap-8 text-sm font-semibold text-slate-400">
+          <span className="hover:text-white transition-colors cursor-pointer">HMM Engine</span>
+          <span className="hover:text-white transition-colors cursor-pointer">Methodology</span>
+          <span className="hover:text-white transition-colors cursor-pointer">API Reference</span>
         </div>
 
-        {/* Right */}
-        <div className="flex items-center gap-6">
-          <span className="hidden md:inline text-slate-500 text-[14px]">API Reference</span>
+        {/* Action Button */}
+        <div className="flex items-center gap-4">
           <Link
             to="/dashboard"
-            className="bg-white border border-slate-200 shadow-sm px-5 py-2 rounded-md text-sm text-slate-900 hover:shadow-md transition"
+            className="relative inline-flex items-center justify-center p-0.5 mb-2 me-2 overflow-hidden text-xs font-bold rounded-lg group bg-gradient-to-br from-blue-600 to-indigo-500 group-hover:from-blue-600 group-hover:to-indigo-500 hover:text-white text-white focus:ring-4 focus:outline-none focus:ring-blue-800 transition"
           >
-            Get Started
+            <span className="relative px-4 py-2 transition-all ease-in duration-75 bg-slate-950 rounded-md group-hover:bg-opacity-0">
+              Launch Dashboard
+            </span>
           </Link>
         </div>
-      </div>
+      </nav>
 
-      {/* ================= HERO ================= */}
-      <div className="px-5 md:px-10 xl:px-20 pt-12 md:pt-20 pb-16 md:pb-24 flex flex-col lg:flex-row gap-10 lg:gap-16 justify-between items-start lg:items-center">
-
-        {/* LEFT */}
-        <div className="max-w-2xl">
-
-          <div className="inline-block border border-blue-200 bg-white text-blue-600 text-xs px-4 py-1 rounded-full mb-6">
-            ⚡ Powered by HMM Technology
+      {/* ================= HERO SECTION ================= */}
+      <header className="px-6 md:px-12 xl:px-24 pt-16 md:pt-24 pb-20 md:pb-32 max-w-[1440px] mx-auto flex flex-col lg:flex-row gap-12 lg:gap-20 justify-between items-center">
+        
+        {/* Left Info Column */}
+        <div className="max-w-2xl text-left">
+          <div className="inline-flex items-center gap-2 border border-blue-500/30 bg-blue-500/10 text-blue-400 text-xs font-semibold px-4 py-1.5 rounded-full mb-6">
+            <Zap size={12} className="animate-bounce text-blue-400" />
+            <span>HMM-Driven Regime Classification v2.4</span>
           </div>
 
-          <h1 className="text-4xl md:text-6xl xl:text-7xl leading-tight font-bold mb-6 tracking-tight">
-            Pollution Regime
+          <h1 className="text-4xl md:text-6xl xl:text-7xl font-extrabold tracking-tight leading-[1.1] mb-6">
+            Decode Hidden
             <br />
-            Detection using{" "}
-            <span className="text-blue-500">AI</span>
+            <span className="bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent">
+              Pollution Regimes
+            </span>
           </h1>
 
-          <p className="text-slate-500 text-[16px] leading-7 mb-8">
-            Analyze time-series air pollution data using Hidden Markov Models
-            to detect stable and volatile regimes. Turn raw CSV sensor exports
-            into actionable environmental insights.
+          <p className="text-slate-400 text-base md:text-lg leading-relaxed mb-8 max-w-xl">
+            Analyze time-series environmental data using sequence-based 
+            <strong> Hidden Markov Models (HMM)</strong>. Automatically isolate stable, 
+            volatile, and critical micro-climates from complex air sensor streams.
           </p>
 
-          <div className="flex flex-wrap gap-4 mb-8">
+          {/* Call to Actions */}
+          <div className="flex flex-wrap gap-4 mb-10">
             <Link
               to="/upload"
-              className="bg-blue-600 text-white border border-blue-600 shadow-sm px-6 py-3 rounded-lg text-sm hover:bg-blue-700 transition"
+              className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-sm px-7 py-3.5 rounded-xl shadow-lg shadow-blue-500/10 hover:shadow-blue-500/20 transition-all hover:-translate-y-0.5 group"
             >
-              Upload Dataset
+              <Upload size={16} />
+              Ingest Dataset
+              <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
             </Link>
 
             <Link
               to="/dashboard"
-              className="border border-slate-200 bg-white px-6 py-3 rounded-lg text-sm hover:border-blue-300 transition"
+              className="flex items-center gap-2 border border-slate-800 bg-slate-900/60 hover:bg-slate-800/80 text-slate-200 hover:text-white font-bold text-sm px-7 py-3.5 rounded-xl transition-all"
             >
+              <LineChart size={16} />
               View Dashboard
             </Link>
-            <Link
-              to="/history"
-              className="border border-slate-200 bg-white px-6 py-3 rounded-lg text-sm hover:border-blue-300 transition"
-            >
-              View History
-            </Link>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div className="bg-white border border-slate-200 rounded-lg px-4 py-3">
-              <p className="text-xs text-slate-500">Current AQI</p>
-              <p className="text-xl font-bold text-slate-900">{currentAqi}</p>
+          {/* Quick Metrics Grid */}
+          <div className="grid grid-cols-3 gap-4 max-w-lg border border-slate-900 bg-slate-950/40 backdrop-blur p-4 rounded-2xl">
+            <div className="border-r border-slate-900 pr-4">
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
+                Latest AQI
+              </span>
+              <span className="text-xl font-black text-white">{currentAqi}</span>
             </div>
-            <div className="bg-white border border-slate-200 rounded-lg px-4 py-3">
-              <p className="text-xs text-slate-500">Latest Regime</p>
-              <p className="text-xl font-bold text-slate-900 capitalize">
-                {normalizeRegime(latestPrediction?.regime || latestPrediction?.state)}
-              </p>
+            <div className="border-r border-slate-900 px-4">
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
+                Classification
+              </span>
+              <span className="text-xl font-black text-white capitalize">
+                {latestPrediction ? normalizeRegime(latestPrediction.regime) : "—"}
+              </span>
             </div>
-            <div className="bg-white border border-slate-200 rounded-lg px-4 py-3">
-              <p className="text-xs text-slate-500">Confidence</p>
-              <p className="text-xl font-bold text-slate-900">{confidencePct}</p>
+            <div className="pl-4">
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
+                Model Confidence
+              </span>
+              <span className="text-xl font-black text-white">{confidencePct}</span>
             </div>
           </div>
         </div>
 
-        {/* RIGHT CARD */}
-        <div className="bg-white border border-slate-200 rounded-2xl p-6 w-full max-w-lg shadow-xl">
-
-          <div className="flex justify-between items-center mb-4">
-            <div>
-              <h3 className="text-sm font-semibold">
-                HMM-based Regime Detection
-              </h3>
-              <p className="text-xs text-slate-500">
-                Sample PM2.5 time-series analysis
-              </p>
+        {/* Right Graphic Column (HMM Dashboard Mockup) */}
+        <div className="relative w-full max-w-lg group">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl blur-xl opacity-20 group-hover:opacity-30 transition-all" />
+          
+          <div className="relative border border-slate-800/80 bg-slate-900/70 backdrop-blur-xl p-6 rounded-2xl shadow-2xl flex flex-col">
+            {/* Window header */}
+            <div className="flex justify-between items-center mb-6">
+              <div className="flex gap-2">
+                <span className="w-2.5 h-2.5 bg-rose-500 rounded-full" />
+                <span className="w-2.5 h-2.5 bg-amber-500 rounded-full" />
+                <span className="w-2.5 h-2.5 bg-emerald-500 rounded-full" />
+              </div>
+              <span className="text-[10px] font-bold tracking-widest text-slate-500 uppercase">
+                hmm_state_machine.json
+              </span>
             </div>
 
-            <div className="flex gap-3 text-xs">
-              <span className="text-blue-400">● Stable</span>
-              <span className="text-red-400">● Volatile</span>
-            </div>
-          </div>
-
-          <div className="h-[220px] bg-slate-50 rounded-xl flex flex-col items-center justify-center text-slate-700 text-sm p-6 text-center">
-            {modelInfo ? (
-              <>
-                <div className="text-[11px] font-bold uppercase text-slate-500 mb-2">Latest Trained Model</div>
-                <div className="text-[18px] font-extrabold text-slate-900 mb-2">
-                  HMM ({modelInfo.n_states} States)
-                </div>
-                <div className="text-slate-600">
-                  {latestPrediction ? (
-                    <>
-                      Latest Regime:{" "}
-                      <span className="font-bold capitalize">
-                        {normalizeRegime(latestPrediction?.regime || latestPrediction?.state)}
+            {/* Model Card Detail */}
+            <div className="border border-slate-800 bg-slate-950/80 p-6 rounded-xl mb-4 flex flex-col items-center justify-center min-h-[220px]">
+              {modelInfo ? (
+                <>
+                  <div className="flex items-center gap-2 border border-indigo-500/20 bg-indigo-500/10 text-indigo-400 text-[10px] font-extrabold px-3 py-1 rounded-full mb-3 uppercase tracking-wider">
+                    <Cpu size={10} className="animate-spin" />
+                    Model Live
+                  </div>
+                  <div className="text-2xl font-black text-white mb-2">
+                    Gaussian HMM ({modelInfo.n_states} States)
+                  </div>
+                  <div className="text-sm text-slate-400 flex items-center gap-2">
+                    Latest classification:{" "}
+                    {latestPrediction ? (
+                      <span className={`px-2 py-0.5 rounded text-xs font-bold border capitalize ${getRegimeColor(latestPrediction.regime)}`}>
+                        {normalizeRegime(latestPrediction.regime)}
                       </span>
-                    </>
-                  ) : (
-                    "Run predictions to see the latest regime"
-                  )}
+                    ) : (
+                      <span className="text-slate-500 font-semibold">Ready</span>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <Network size={36} className="text-slate-600 mb-4 stroke-[1.5]" />
+                  <div className="text-lg font-bold text-white mb-1">
+                    No Active HMM Model
+                  </div>
+                  <p className="text-xs text-slate-500 text-center max-w-[280px]">
+                    Deploy and configure your first Hidden Markov Model by uploading a CSV.
+                  </p>
+                </>
+              )}
+            </div>
+
+            {/* Simulated graph or HMM transition states visualization */}
+            <div className="bg-slate-950/50 border border-slate-900 p-4 rounded-xl">
+              <div className="flex justify-between items-center mb-3">
+                <span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">
+                  Transitions &amp; Probabilities
+                </span>
+                <span className="text-xs font-bold text-blue-400">HMM Engine v2</span>
+              </div>
+              
+              {/* Dynamic HMM Transition Mockup */}
+              <div className="flex justify-around items-center py-2 relative">
+                {/* State 1 */}
+                <div 
+                  className={`relative z-10 w-12 h-12 rounded-full border-2 flex flex-col items-center justify-center transition-all ${
+                    hoveredRegime === 'stable' 
+                      ? 'border-emerald-400 bg-emerald-950/80 scale-110 shadow-lg shadow-emerald-500/10' 
+                      : 'border-slate-800 bg-slate-900'
+                  }`}
+                  onMouseEnter={() => setHoveredRegime('stable')}
+                  onMouseLeave={() => setHoveredRegime(null)}
+                >
+                  <span className="text-[9px] font-bold text-slate-500 uppercase">S1</span>
+                  <span className="text-[10px] font-black text-emerald-400">Stable</span>
                 </div>
-              </>
-            ) : (
-              <>
-                <div className="text-[11px] font-bold uppercase text-slate-500 mb-2">No Trained Model</div>
-                <div className="text-[16px] font-extrabold text-slate-900 mb-2">Upload & Train to begin</div>
-                <div className="text-slate-600">Your chart and regimes will appear here automatically.</div>
-              </>
-            )}
-          </div>
+                {/* Arrow */}
+                <div className="h-0.5 bg-gradient-to-r from-emerald-500 to-amber-500 flex-1 mx-2 relative opacity-50" />
+                {/* State 2 */}
+                <div 
+                  className={`relative z-10 w-12 h-12 rounded-full border-2 flex flex-col items-center justify-center transition-all ${
+                    hoveredRegime === 'volatile' 
+                      ? 'border-amber-400 bg-amber-950/80 scale-110 shadow-lg shadow-amber-500/10' 
+                      : 'border-slate-800 bg-slate-900'
+                  }`}
+                  onMouseEnter={() => setHoveredRegime('volatile')}
+                  onMouseLeave={() => setHoveredRegime(null)}
+                >
+                  <span className="text-[9px] font-bold text-slate-500 uppercase">S2</span>
+                  <span className="text-[10px] font-black text-amber-400">Volat</span>
+                </div>
+                {/* Arrow */}
+                <div className="h-0.5 bg-gradient-to-r from-amber-500 to-rose-500 flex-1 mx-2 relative opacity-50" />
+                {/* State 3 */}
+                <div 
+                  className={`relative z-10 w-12 h-12 rounded-full border-2 flex flex-col items-center justify-center transition-all ${
+                    hoveredRegime === 'high' 
+                      ? 'border-rose-400 bg-rose-950/80 scale-110 shadow-lg shadow-rose-500/10' 
+                      : 'border-slate-800 bg-slate-900'
+                  }`}
+                  onMouseEnter={() => setHoveredRegime('high')}
+                  onMouseLeave={() => setHoveredRegime(null)}
+                >
+                  <span className="text-[9px] font-bold text-slate-500 uppercase">S3</span>
+                  <span className="text-[10px] font-black text-rose-400">High</span>
+                </div>
+              </div>
+            </div>
 
-          <div className="flex justify-between text-xs text-slate-500 mt-4">
-            <span>{modelInfo ? `Log Likelihood: ${Number(modelInfo.log_likelihood).toFixed(2)}` : "Log Likelihood: —"}</span>
-            <span>Confidence: {confidencePct}</span>
+            <div className="flex justify-between items-center text-[10px] text-slate-500 mt-4 font-mono">
+              <span>{modelInfo ? `Log Likelihood: ${Number(modelInfo.log_likelihood).toFixed(2)}` : "Log Likelihood: —"}</span>
+              <span>Confidence: {confidencePct}</span>
+            </div>
           </div>
         </div>
-      </div>
+      </header>
 
-      {/* ================= FEATURES ================= */}
-      <div className="bg-white px-5 md:px-10 xl:px-20 py-16 md:py-20 border-y border-slate-200">
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-
-          {/* CARD 1 */}
-          <div>
-            <div className="w-12 h-12 bg-blue-600/20 flex items-center justify-center rounded-lg mb-4">
-              ⬆
-            </div>
-            <h3 className="text-lg font-semibold mb-3">Upload Dataset</h3>
-            <p className="text-slate-500 text-sm mb-3 leading-6">
-              Securely upload your CSV formatted pollution data. Supports PM2.5,
-              PM10, NO2, and SO2 time-series without needing active sensor
-              connections.
+      {/* ================= METHODOLOGY FEATURES ================= */}
+      <section className="bg-slate-900/40 border-y border-slate-900 py-24 px-6 md:px-12 xl:px-24">
+        <div className="max-w-[1440px] mx-auto">
+          
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <h2 className="text-xs font-bold text-blue-500 uppercase tracking-widest mb-3">
+              Application Features
+            </h2>
+            <p className="text-3xl md:text-4xl font-extrabold text-white">
+              Smarter Time-Series Classification
             </p>
-            <Link to="/upload" className="text-blue-500 text-sm cursor-pointer font-medium hover:text-blue-700 transition">
-              Upload CSV →
-            </Link>
+            <p className="text-slate-400 mt-4 leading-relaxed">
+              Standard alerts only trigger when a threshold is crossed. AeroMetrics uses Hidden Markov Models to classify the underlying health and regime transitions over time.
+            </p>
           </div>
 
-          {/* CARD 2 */}
-          <div>
-            <div className="w-12 h-12 bg-blue-600/20 flex items-center justify-center rounded-lg mb-4">
-              ⚙
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            
+            {/* Feature 1 */}
+            <div className="group border border-slate-900 bg-slate-950/30 p-8 rounded-2xl hover:border-slate-800 hover:bg-slate-900/30 transition-all">
+              <div className="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center text-blue-400 mb-6 group-hover:scale-110 transition-transform">
+                <Upload size={22} />
+              </div>
+              <h3 className="text-xl font-bold text-white mb-3">Dataset Ingestion</h3>
+              <p className="text-slate-400 text-sm leading-relaxed mb-6">
+                Directly upload CSV time-series data. Features include automated previews, columns validation, missing value reconstruction, and size limits enforcement.
+              </p>
+              <Link to="/upload" className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-400 hover:text-blue-300 transition-colors">
+                Ingest CSV
+                <ArrowRight size={14} />
+              </Link>
             </div>
-            <h3 className="text-lg font-semibold mb-3">Train Model</h3>
-            <p className="text-slate-500 text-sm mb-3 leading-6">
-              Configure your Hidden Markov Model with custom states. Our engine
-              automatically optimizes transition probabilities for your dataset.
-            </p>
-            <Link to="/settings" className="text-blue-500 text-sm cursor-pointer font-medium hover:text-blue-700 transition">
-              Configure & Train →
-            </Link>
-          </div>
 
-          {/* CARD 3 */}
-          <div>
-            <div className="w-12 h-12 bg-blue-600/20 flex items-center justify-center rounded-lg mb-4">
-              📊
+            {/* Feature 2 */}
+            <div className="group border border-slate-900 bg-slate-950/30 p-8 rounded-2xl hover:border-slate-800 hover:bg-slate-900/30 transition-all">
+              <div className="w-12 h-12 bg-indigo-500/10 rounded-xl flex items-center justify-center text-indigo-400 mb-6 group-hover:scale-110 transition-transform">
+                <Cpu size={22} />
+              </div>
+              <h3 className="text-xl font-bold text-white mb-3">Markov State Optimization</h3>
+              <p className="text-slate-400 text-sm leading-relaxed mb-6">
+                Configure custom state counts (2 to 5 states). Our HMM optimization runs training to estimate emission distributions and state transition matrices dynamically.
+              </p>
+              <Link to="/settings" className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-400 hover:text-indigo-300 transition-colors">
+                Configure Engine
+                <ArrowRight size={14} />
+              </Link>
             </div>
-            <h3 className="text-lg font-semibold mb-3">
-              Visualize Predictions
-            </h3>
-            <p className="text-slate-500 text-sm mb-3 leading-6">
-              Instantly view regime transitions. Identify persistent 'Stable'
-              periods and risky 'Volatile' bursts with high-confidence mapping.
-            </p>
-            <Link to="/advanced" className="text-blue-500 text-sm cursor-pointer font-medium hover:text-blue-700 transition">
-              Explore Visuals →
-            </Link>
+
+            {/* Feature 3 */}
+            <div className="group border border-slate-900 bg-slate-950/30 p-8 rounded-2xl hover:border-slate-800 hover:bg-slate-900/30 transition-all">
+              <div className="w-12 h-12 bg-purple-500/10 rounded-xl flex items-center justify-center text-purple-400 mb-6 group-hover:scale-110 transition-transform">
+                <BarChart3 size={22} />
+              </div>
+              <h3 className="text-xl font-bold text-white mb-3">Interactive Dashboards</h3>
+              <p className="text-slate-400 text-sm leading-relaxed mb-6">
+                Gain insights via transitional probability matrices, temporal aggregations, and confidence thresholds. Export analytics and track historical run audits.
+              </p>
+              <Link to="/advanced" className="inline-flex items-center gap-1.5 text-xs font-bold text-purple-400 hover:text-purple-300 transition-colors">
+                Explore Analytics
+                <ArrowRight size={14} />
+              </Link>
+            </div>
+
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* ================= TAG BAR ================= */}
-      <div className="border-t border-slate-200 border-b border-slate-200 py-6 px-5 md:px-10 xl:px-20 flex flex-wrap gap-3 md:gap-0 justify-between text-slate-500 text-sm">
-        <span>📁 CSV_INPUT</span>
-        <span>🧠 HMM_INFERENCE</span>
-        <span>⬇ EXPORTABLE_REPORTS</span>
-        <span>🔒 DATA_INTEGRITY</span>
-      </div>
+      {/* ================= CAPABILITIES TAG BAR ================= */}
+      <section className="border-b border-slate-900 py-10 px-6 md:px-12 xl:px-24">
+        <div className="max-w-[1440px] mx-auto flex flex-wrap gap-8 justify-around items-center text-slate-500 text-xs font-bold tracking-widest uppercase">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 size={14} className="text-blue-500/50" />
+            <span>CSV Ingestion Layer</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <CheckCircle2 size={14} className="text-indigo-500/50" />
+            <span>HMM Engine Classifier</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <CheckCircle2 size={14} className="text-purple-500/50" />
+            <span>Transitional Probability Analysis</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <CheckCircle2 size={14} className="text-emerald-500/50" />
+            <span>SQL Database Persistence</span>
+          </div>
+        </div>
+      </section>
 
       {/* ================= FOOTER ================= */}
-      <div className="px-5 md:px-10 xl:px-20 py-14">
-
-        <div className="flex flex-col lg:flex-row gap-8 justify-between items-start mb-10">
-
+      <footer className="px-6 md:px-12 xl:px-24 py-16 max-w-[1440px] mx-auto">
+        <div className="flex flex-col lg:flex-row gap-12 justify-between items-start mb-12">
+          
           <div>
-            <h2 className="text-blue-500 font-semibold mb-2">
-              Pollution Regime
-            </h2>
-            <p className="text-slate-500 text-sm">
-              Built for professional environmental data analysis.
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-6 h-6 rounded bg-blue-600 flex items-center justify-center text-white text-[10px] font-black">
+                A
+              </div>
+              <span className="font-bold text-white tracking-tight">AeroMetrics</span>
+            </div>
+            <p className="text-slate-500 text-xs leading-relaxed max-w-sm">
+              An advanced environmental time-series regime modeling suite built with Python, FastAPI, and React.
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-6 text-slate-500 text-sm">
-            <span>About</span>
-            <span>Privacy Policy</span>
-            <span>Terms of Service</span>
-            <span>Source Code</span>
+          <div className="flex flex-wrap gap-8 text-slate-400 text-sm">
+            <span className="hover:text-white transition-colors cursor-pointer">About Product</span>
+            <span className="hover:text-white transition-colors cursor-pointer">Privacy Charter</span>
+            <span className="hover:text-white transition-colors cursor-pointer">Terms of Service</span>
+            <span className="hover:text-white transition-colors cursor-pointer">GitHub Repo</span>
           </div>
 
-          <div className="text-right text-slate-500 text-sm">
-            <p>Developed by AeroMetrics</p>
-            <p className="text-xs">Version 2.4.0-stable</p>
+          <div className="text-slate-400 text-sm lg:text-right">
+            <p className="font-semibold text-slate-200">Developed by AeroMetrics</p>
+            <p className="text-xs text-slate-500 mt-1">Platform Version 2.4.0-stable</p>
           </div>
+
         </div>
 
-        <div className="border-t border-[#E2E8F0] pt-6 text-center text-slate-500 text-xs">
-          © 2026 POLLUTION REGIME DETECTION TOOL. ALL RIGHTS RESERVED.
+        <div className="border-t border-slate-900 pt-8 text-center text-slate-600 text-xs">
+          © 2026 AEROMETRICS DETECTION SUITE. ALL RIGHTS RESERVED.
         </div>
-      </div>
+      </footer>
+
     </div>
   );
 };
