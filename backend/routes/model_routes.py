@@ -412,8 +412,13 @@ def delete_run(run_id: str):
         db.close()
 
 
+_DASHBOARD_CACHE = None
+_LATEST_RUN_ID_CACHE = None
+
+
 @router.get("/dashboard/latest")
 def dashboard_latest():
+    global _DASHBOARD_CACHE, _LATEST_RUN_ID_CACHE
     db = SessionLocal()
     try:
         from backend.models import RegimePrediction
@@ -422,6 +427,9 @@ def dashboard_latest():
         latest_run = get_latest_successful_run_with_predictions(db)
         if not latest_run:
             return None
+
+        if _LATEST_RUN_ID_CACHE == str(latest_run.run_id) and _DASHBOARD_CACHE is not None:
+            return _DASHBOARD_CACHE
 
         target_dataset = db.query(Dataset).filter(Dataset.dataset_id == latest_run.dataset_id).first()
 
@@ -500,7 +508,7 @@ def dashboard_latest():
         )
 
         gen_at = latest_run.completed_at or latest_run.created_at
-        return {
+        res = {
             "run_id": str(latest_run.run_id),
             "dataset_name": ds_name,
             "generated_at": _api_iso(gen_at),
@@ -521,12 +529,17 @@ def dashboard_latest():
             "recent_transitions": transitions[-15:][::-1],
             "insights": insights,
         }
+        
+        _DASHBOARD_CACHE = res
+        _LATEST_RUN_ID_CACHE = str(latest_run.run_id)
+        return res
 
     except Exception:
         logger.exception("dashboard_latest_failed")
         raise HTTPException(status_code=500, detail="Dashboard query failed")
     finally:
         db.close()
+
 
 
 @router.get("/advanced-analytics")
